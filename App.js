@@ -1,29 +1,89 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
+import React from 'react';
+import { StyleSheet, View, Dimensions, Platform } from 'react-native';
+import MapView, { Marker, AnimatedRegion } from 'react-native-maps';
+import PubNubReact from 'pubnub-react';
 
-import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+const { width, height } = Dimensions.get('window');
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+const ASPECT_RATIO = width / height;
+const LATITUDE = 37.78825;
+const LONGITUDE = -122.4324;
+const LATITUDE_DELTA = 0.0922;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-type Props = {};
-export default class App extends Component<Props> {
+class Tracker extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      latitude: LATITUDE,
+      longitude: LONGITUDE,
+      coordinate: new AnimatedRegion({
+        latitude: null,
+        longitude: null,
+        latitudeDelta: LATITUDE_DELTA,
+        longitudeDelta: LONGITUDE_DELTA,
+      }),
+    };
+
+    this.pubnub = new PubNubReact({
+      publishKey: 'pub-c-f97bcd2e-6e30-40a1-b85b-0365772cd633',
+      subscribeKey: 'sub-c-845ee83e-8b5c-11e9-9769-e24cdeae5ee1',
+    });
+    this.pubnub.init(this);
+  }
+
+  // code to receive messages sent in a channel
+  componentDidMount() {
+    this.pubnub.subscribe({
+      channels: ['location'],
+      withPresence: true,
+    });
+    this.pubnub.getMessage('location', msg => {
+      const { coordinate } = this.state;
+      const { latitude, longitude } = msg.message;
+      const newCoordinate = { latitude, longitude };
+
+      if (Platform.OS === 'android') {
+        if (this.marker) {
+          this.marker._component.animateMarkerToCoordinate(newCoordinate, 500);
+        }
+      } else {
+        coordinate.timing(newCoordinate).start();
+      }
+
+      this.setState({
+        latitude,
+        longitude,
+      });
+    });
+  }
+
+  getMapRegion = () => ({
+    latitude: this.state.latitude,
+    longitude: this.state.longitude,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  });
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
+        <MapView
+          style={styles.map}
+          showUserLocation
+          followUserLocation
+          loadingEnabled
+          ref={c => (this.mapView = c)}
+          region={this.state.latitude ? this.getMapRegion() : null}
+        >
+          <Marker.Animated
+            ref={marker => {
+              this.marker = marker;
+            }}
+            coordinate={this.state.coordinate}
+          />
+        </MapView>
       </View>
     );
   }
@@ -31,19 +91,13 @@ export default class App extends Component<Props> {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
 });
+
+export default Tracker;
