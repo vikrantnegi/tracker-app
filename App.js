@@ -30,8 +30,8 @@ class Tracker extends React.Component {
 
     // Replace "X" with your PubNub Keys
     this.pubnub = new PubNubReact({
-      publishKey: 'X',
-      subscribeKey: 'X',
+      publishKey: 'pub-c-f97bcd2e-6e30-40a1-b85b-0365772cd633',
+      subscribeKey: 'sub-c-845ee83e-8b5c-11e9-9769-e24cdeae5ee1',
     });
     this.pubnub.init(this);
   }
