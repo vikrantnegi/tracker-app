@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Dimensions, Platform } from 'react-native';
+import { StyleSheet, View, Dimensions, Platform, SafeAreaView } from 'react-native';
 import MapView, { Marker, AnimatedRegion } from 'react-native-maps';
 import PubNubReact from 'pubnub-react';
 
@@ -10,6 +10,8 @@ const LATITUDE = 37.78825;
 const LONGITUDE = -122.4324;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+
+console.disableYellowBox = true;
 
 class Tracker extends React.Component {
   constructor(props) {
@@ -36,6 +38,10 @@ class Tracker extends React.Component {
 
   // code to receive messages sent in a channel
   componentDidMount() {
+    this.subscribeToPubNub();
+  }
+
+  subscribeToPubNub = () => {
     this.pubnub.subscribe({
       channels: ['location'],
       withPresence: true,
@@ -58,7 +64,7 @@ class Tracker extends React.Component {
         longitude,
       });
     });
-  }
+  };
 
   getMapRegion = () => ({
     latitude: this.state.latitude,
@@ -69,23 +75,25 @@ class Tracker extends React.Component {
 
   render() {
     return (
-      <View style={styles.container}>
-        <MapView
-          style={styles.map}
-          showUserLocation
-          followUserLocation
-          loadingEnabled
-          ref={c => (this.mapView = c)}
-          region={this.state.latitude ? this.getMapRegion() : null}
-        >
-          <Marker.Animated
-            ref={marker => {
-              this.marker = marker;
-            }}
-            coordinate={this.state.coordinate}
-          />
-        </MapView>
-      </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          <MapView
+            style={styles.map}
+            showUserLocation
+            followUserLocation
+            loadingEnabled
+            ref={c => (this.mapView = c)}
+            region={this.state.latitude ? this.getMapRegion() : null}
+          >
+            <Marker.Animated
+              ref={marker => {
+                this.marker = marker;
+              }}
+              coordinate={this.state.coordinate}
+            />
+          </MapView>
+        </View>
+      </SafeAreaView>
     );
   }
 }
