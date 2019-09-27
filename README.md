@@ -1,6 +1,6 @@
 # React Native Tracker App
 
-> A Realtime location tracking app. This app is one of the two location tracking app. This app will track the [Trackee](https://github.com/vikrantnegi/trackee-app) app.
+> A Realtime location tracking app for [article](https://www.sitepoint.com/react-native-pubnub-real-time-location-tracking/) published on SitePoint.. This app is one of the two location tracking app. This app will track the [Trackee](https://github.com/vikrantnegi/trackee-app) app.
 
 ## Clone the repo
 
